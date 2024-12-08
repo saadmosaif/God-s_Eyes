@@ -38,7 +38,7 @@ function draw() {
   for (let i = 0; i < leaders.length; i++) {
     let leader = leaders[i];
     leader.wander(); // Wander behavior
-    leader.update(obstacles, enemies); // Update with obstacle and enemy avoidance
+    leader.update(obstacles, enemies, leaders);// Update with obstacle and enemy avoidance
     leader.show(); // Display the leader
 
     if (debug) leader.debug(); // Display leader debug info
@@ -77,7 +77,7 @@ function draw() {
 
 
 function mousePressed(event) {
-  if (mouseButton === RIGHT) {
+  if (mouseButton === LEFT) {
     event.preventDefault();
     let obstacle = {
       pos: createVector(mouseX, mouseY),
