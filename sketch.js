@@ -35,39 +35,45 @@ function draw() {
   }
 
   // Update and display leaders
-  for (let leader of leaders) {
-    leader.wander(); // Wandering behavior
-    leader.update(obstacles, enemies); // Avoid obstacles and pursue enemies
-    leader.show();
+  for (let i = 0; i < leaders.length; i++) {
+    let leader = leaders[i];
+    leader.wander(); // Wander behavior
+    leader.update(obstacles, enemies); // Update with obstacle and enemy avoidance
+    leader.show(); // Display the leader
 
-    if (debug) leader.debug(); // Debug leader behavior
-  }
+    if (debug) leader.debug(); // Display leader debug info
 
-  // Update and display suiveurs for each leader
-  for (let leader of leaders) {
-    for (let i = 0; i < leader.suiveurs.length; i++) {
-      let suiveur = leader.suiveurs[i];
-      let target = i === 0 ? leader.pos : leader.suiveurs[i - 1].pos; // Follow leader or previous suiveur
+    // Update and display suiveurs
+    for (let j = 0; j < leader.suiveurs.length; j++) {
+      let suiveur = leader.suiveurs[j];
+      let target = j === 0 ? leader.pos : leader.suiveurs[j - 1].pos;
 
-      suiveur.followTarget(target);
-      suiveur.update();
-      suiveur.show();
+      suiveur.followTarget(target); // Follow the leader or the previous suiveur
+      suiveur.update(leader.pos, leader.suiveurs); // Update with leader and other suiveurs
+      suiveur.show(); // Display the suiveur
 
-      if (debug) suiveur.debug(target); // Debug suiveur behavior
+      if (debug) suiveur.debug(target, leader.pos); // Debug visuals for the suiveur
     }
   }
 
+  // Update and display enemies
   for (let enemy of enemies) {
-    enemy.flock(enemies); // Apply flocking behavior
-    enemy.avoidLeaderAndSuiveurs(leaders[0]); // Flee from the first leader and its suiveurs
+    enemy.flock(enemies); // Apply flocking behavior (separation, alignment, cohesion)
+    for (let leader of leaders) {
+      enemy.avoidLeaderAndSuiveurs(leader); // Avoid all leaders and their suiveurs
+    }
     let obstacleAvoidance = enemy.avoidObstacles(obstacles); // Avoid obstacles
-    enemy.applyForce(obstacleAvoidance); // Apply obstacle avoidance
-    enemy.update(); // Update position
+    enemy.applyForce(obstacleAvoidance); // Apply obstacle avoidance force
+    enemy.update(); // Update enemy position and velocity
     enemy.show(); // Display enemy
-  }
-  
 
+    if (debug) {
+      // Additional debug for enemies
+      enemy.debug();
+    }
+  }
 }
+
 
 
 function mousePressed(event) {

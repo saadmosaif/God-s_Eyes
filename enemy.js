@@ -1,13 +1,13 @@
 class Enemy {
     constructor(x, y, img) {
-      this.pos = createVector(x, y); // Position
-      this.vel = p5.Vector.random2D(); // Initial velocity
-      this.acc = createVector(0, 0); // Acceleration
-      this.maxSpeed = 3; // Maximum speed
-      this.maxForce = 0.2; // Maximum steering force
-      this.r = 20; // Visual size (radius)
-      this.img = img; // Enemy image
-      this.perceptionRadius = 50; // Perception radius for flocking
+      this.pos = createVector(x, y);
+      this.vel = p5.Vector.random2D();
+      this.acc = createVector(0, 0);
+      this.maxSpeed = 3;
+      this.maxForce = 0.2;
+      this.r = 20; // Radius for visual size
+      this.img = img;
+      this.perceptionRadius = 50; // Radius for flocking behaviors
     }
   
     // Separation: Avoid crowding nearby enemies
@@ -35,7 +35,7 @@ class Enemy {
       return steer;
     }
   
-    // Alignment: Steer toward the average heading of nearby enemies
+    // Alignment: Steer toward the average velocity of nearby enemies
     align(enemies) {
       let avgVel = createVector(0, 0);
       let count = 0;
@@ -87,7 +87,7 @@ class Enemy {
       return steer;
     }
   
-    // Combine separation, alignment, and cohesion
+    // Flocking behavior: Combine separation, alignment, and cohesion
     flock(enemies) {
       let separation = this.separate(enemies);
       let alignment = this.align(enemies);
@@ -128,6 +128,16 @@ class Enemy {
       return steer;
     }
   
+    // Flee from leader and its suiveurs
+    avoidLeaderAndSuiveurs(leader) {
+      let fleeForce = this.flee(leader.pos);
+      for (let suiveur of leader.suiveurs) {
+        let suiveurFlee = this.flee(suiveur.pos);
+        fleeForce.add(suiveurFlee);
+      }
+      this.applyForce(fleeForce);
+    }
+  
     // Flee behavior
     flee(target) {
       let desired = p5.Vector.sub(this.pos, target);
@@ -141,20 +151,12 @@ class Enemy {
       return createVector(0, 0);
     }
   
-    // Avoid leader and suiveurs
-    avoidLeaderAndSuiveurs(leader) {
-      let fleeForce = this.flee(leader.pos); // Flee from leader
-      for (let suiveur of leader.suiveurs) {
-        let suiveurFlee = this.flee(suiveur.pos); // Flee from suiveurs
-        fleeForce.add(suiveurFlee);
-      }
-      this.applyForce(fleeForce);
-    }
-  
+    // Apply force to the enemy
     applyForce(force) {
-      this.acc.add(force); // Add force to acceleration
+      this.acc.add(force);
     }
   
+    // Update position and velocity
     update() {
       this.vel.add(this.acc);
       this.vel.limit(this.maxSpeed);
@@ -164,6 +166,7 @@ class Enemy {
       this.edges(); // Keep enemies within canvas
     }
   
+    // Keep enemies within the canvas
     edges() {
       if (this.pos.x > width) this.pos.x = width;
       if (this.pos.x < 0) this.pos.x = 0;
@@ -171,18 +174,22 @@ class Enemy {
       if (this.pos.y < 0) this.pos.y = 0;
     }
   
+    // Display the enemy
     show() {
       imageMode(CENTER);
       image(this.img, this.pos.x, this.pos.y, this.r * 2, this.r * 2);
+    }
   
+    // Debug visuals
+    debug() {
       if (debug) {
         // Debug fleeing radius
         noFill();
-        stroke(0, 255, 0, 100);
+        stroke(0, 255, 0, 100); // Green for flee radius
         ellipse(this.pos.x, this.pos.y, 300); // Radius is 2x flee distance (150)
   
         // Debug velocity vector
-        stroke(255, 255, 0, 150);
+        stroke(255, 255, 0, 150); // Yellow for velocity vector
         line(
           this.pos.x,
           this.pos.y,
@@ -192,4 +199,4 @@ class Enemy {
       }
     }
   }
-  
+      
