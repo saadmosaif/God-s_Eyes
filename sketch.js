@@ -26,8 +26,9 @@ function draw() {
   for (let obstacle of obstacles) {
     imageMode(CENTER);
     image(rockImg, obstacle.pos.x, obstacle.pos.y, obstacle.size, obstacle.size);
+
     if (debug) {
-      stroke(255, 0, 0, 100);
+      stroke(255, 0, 0, 100); // Red for obstacle radius
       noFill();
       ellipse(obstacle.pos.x, obstacle.pos.y, obstacle.size * 2); // Debug obstacle radius
     }
@@ -35,44 +36,39 @@ function draw() {
 
   // Update and display leaders
   for (let leader of leaders) {
-    leader.wander();
-    leader.update(obstacles); // Avoid obstacles
+    leader.wander(); // Wandering behavior
+    leader.update(obstacles, enemies); // Avoid obstacles and pursue enemies
     leader.show();
-    if (debug) leader.debug();
+
+    if (debug) leader.debug(); // Debug leader behavior
   }
 
   // Update and display suiveurs for each leader
   for (let leader of leaders) {
     for (let i = 0; i < leader.suiveurs.length; i++) {
       let suiveur = leader.suiveurs[i];
-      let target = i === 0 ? leader.pos : leader.suiveurs[i - 1].pos;
+      let target = i === 0 ? leader.pos : leader.suiveurs[i - 1].pos; // Follow leader or previous suiveur
 
       suiveur.followTarget(target);
       suiveur.update();
       suiveur.show();
 
-      if (debug) suiveur.debug(target);
+      if (debug) suiveur.debug(target); // Debug suiveur behavior
     }
   }
 
-// Update and display enemies
-for (let enemy of enemies) {
-  enemy.avoidLeaderAndSuiveurs(leaders[0]); // Flee from the first leader
-  let obstacleAvoidance = enemy.avoidObstacles(obstacles); // Avoid obstacles
-  enemy.applyForce(obstacleAvoidance); // Apply avoidance force
-  enemy.update(); // Update position
-  enemy.show(); // Display enemy
-}
-
-for (let obstacle of obstacles) {
-  if (debug) {
-    stroke(255, 0, 0, 100); // Red for obstacle radius
-    noFill();
-    ellipse(obstacle.pos.x, obstacle.pos.y, obstacle.size * 2); // Obstacle radius
+  for (let enemy of enemies) {
+    enemy.flock(enemies); // Apply flocking behavior
+    enemy.avoidLeaderAndSuiveurs(leaders[0]); // Flee from the first leader and its suiveurs
+    let obstacleAvoidance = enemy.avoidObstacles(obstacles); // Avoid obstacles
+    enemy.applyForce(obstacleAvoidance); // Apply obstacle avoidance
+    enemy.update(); // Update position
+    enemy.show(); // Display enemy
   }
-}
+  
 
 }
+
 
 function mousePressed(event) {
   if (mouseButton === RIGHT) {
@@ -93,11 +89,11 @@ function keyPressed() {
     debug = !debug;
   }
   if (key === 'e' || key === 'E') {
-    let swarmSize = 5;
+    let swarmSize = 5; // Number of enemies in the swarm
     for (let i = 0; i < swarmSize; i++) {
       let x = mouseX + random(-50, 50);
       let y = mouseY + random(-50, 50);
-      enemies.push(new Enemy(x, y, enemyImg));
+      enemies.push(new Enemy(x, y, enemyImg)); // Instantiate using the Enemy class
     }
   }
 }

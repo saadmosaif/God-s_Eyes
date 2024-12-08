@@ -19,23 +19,22 @@ class Leader {
     }
   }
 
-  wander() {
-    let circleCenter = this.vel.copy();
-    circleCenter.setMag(this.distanceCercle);
-    circleCenter.add(this.pos);
+  pursue(enemy) {
+    // Predict future position of the enemy
+    let prediction = enemy.vel.copy();
+    prediction.mult(10); // Predict 10 frames ahead
+    let futurePos = p5.Vector.add(enemy.pos, prediction);
 
-    this.wanderTheta += random(-this.displaceRange, this.displaceRange);
-    let wanderPoint = createVector(
-      this.wanderRadius * cos(this.wanderTheta),
-      this.wanderRadius * sin(this.wanderTheta)
-    );
-    wanderPoint.add(circleCenter);
+    // Seek the predicted position
+    return this.seek(futurePos);
+  }
 
-    let force = p5.Vector.sub(wanderPoint, this.pos);
-    force.setMag(this.maxForce);
-    this.applyForce(force);
-
-    this.debugInfo = { circleCenter, wanderPoint };
+  seek(target) {
+    let desired = p5.Vector.sub(target, this.pos);
+    desired.setMag(this.maxSpeed);
+    let steer = p5.Vector.sub(desired, this.vel);
+    steer.limit(this.maxForce);
+    return steer;
   }
 
   avoidObstacles(obstacles) {
@@ -43,6 +42,7 @@ class Leader {
     for (let obstacle of obstacles) {
       let d = p5.Vector.dist(this.pos, obstacle.pos);
       let avoidanceRadius = obstacle.size * 1.5;
+
       if (d < avoidanceRadius) {
         let diff = p5.Vector.sub(this.pos, obstacle.pos);
         diff.normalize();
@@ -62,7 +62,46 @@ class Leader {
     this.acc.add(force);
   }
 
-  update(obstacles) {
+  wander() {
+    let circleCenter = this.vel.copy();
+    circleCenter.setMag(this.distanceCercle);
+    circleCenter.add(this.pos);
+
+    this.wanderTheta += random(-this.displaceRange, this.displaceRange);
+    let wanderPoint = createVector(
+      this.wanderRadius * cos(this.wanderTheta),
+      this.wanderRadius * sin(this.wanderTheta)
+    );
+    wanderPoint.add(circleCenter);
+
+    let force = p5.Vector.sub(wanderPoint, this.pos);
+    force.setMag(this.maxForce);
+    this.applyForce(force);
+
+    this.debugInfo = { circleCenter, wanderPoint };
+  }
+
+  update(obstacles, enemies) {
+    // Pursue the closest enemy if available
+    if (enemies.length > 0) {
+      let closestEnemy = null;
+      let closestDist = Infinity;
+
+      for (let enemy of enemies) {
+        let d = p5.Vector.dist(this.pos, enemy.pos);
+        if (d < closestDist) {
+          closestDist = d;
+          closestEnemy = enemy;
+        }
+      }
+
+      if (closestEnemy) {
+        let pursuitForce = this.pursue(closestEnemy);
+        this.applyForce(pursuitForce);
+      }
+    }
+
+    // Avoid obstacles
     let avoidanceForce = this.avoidObstacles(obstacles);
     this.applyForce(avoidanceForce);
 
@@ -70,6 +109,7 @@ class Leader {
     this.vel.limit(this.maxSpeed);
     this.pos.add(this.vel);
     this.acc.set(0, 0);
+
     this.edges();
   }
 
@@ -90,7 +130,7 @@ class Leader {
   }
 
   debug() {
-    if (debug) {
+    if (debug && this.debugInfo) {
       noFill();
       stroke(255, 0, 0, 150);
       ellipse(this.debugInfo.circleCenter.x, this.debugInfo.circleCenter.y, this.wanderRadius * 2);
@@ -109,4 +149,3 @@ class Leader {
     }
   }
 }
-  
