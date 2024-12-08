@@ -1,60 +1,67 @@
 let leader;
-
-let leaderImg; // Image du leader
-let bgImage; // Image de fond
-let target; // Position cible du leader
-let targetSet = false; // Indique si une cible a été définie (touche "a")
+let leaderImg; // Image of the leader
+let bgImage; // Background image
+let suiveurs = []; // Array of followers
+let debug = false; // Debug mode flag
 
 function preload() {
-  // Charger les images
-  bgImage = loadImage('assets/map.png'); // Assurez-vous que le chemin est correct
-  leaderImg = loadImage('assets/leader.png'); // Charger l'image du leader
+  // Load the images
+  bgImage = loadImage('assets/map.png'); // Ensure the path is correct
+  leaderImg = loadImage('assets/leader.png'); // Load the leader's image
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
-  // Initialiser le leader au centre
-  leader = new Leader(width / 2, height / 2);
+  // Initialize the leader at the center
+  leader = new Leader(width / 2, height / 2, leaderImg);
 
-  // Initialiser la position cible à la position actuelle du leader
-  target = leader.pos.copy();
-    
+  // Create followers
+  for (let i = 0; i < 10; i++) {
+    suiveurs.push(new Suiveurs(width / 2, height / 2 + (i + 1) * 20));
+  }
 }
 
 function draw() {
   background(30);
 
-  // Dessiner l'image de fond
+  // Draw the background image
   image(bgImage, 0, 0, width, height);
 
-  // Dessiner la cible (marqueur rouge)
-  if (targetSet) {
-    fill(255, 0, 0, 150);
-    noStroke();
-    ellipse(target.x, target.y, 20); // Cercle rouge pour la cible
-  }
+  // Call the leader's wander behavior
+  leader.wander();
 
-  // Déplacer le leader vers la cible s'il est en mouvement
-  if (targetSet && !leader.stopped) {
-    let force = leader.arrive(target);
-    leader.applyForce(force);
-  }
-
-  // Mettre à jour et afficher le leader
+  // Update and display the leader
   leader.update();
+  leader.edges();
   leader.show();
+
+  // Show debug info for the leader
+  if (debug) {
+    leader.debug();
+  }
+
+  // Update and display followers in a triangular formation aligned with the leader
+  for (let i = 0; i < suiveurs.length; i++) {
+    let target = suiveurs[i].triangularTarget(leader, i); // Get triangular target position
+    suiveurs[i].followTarget(target); // Move toward the target
+    suiveurs[i].update(); // Update position
+    suiveurs[i].show(); // Display
+
+    // Show debug info for followers
+    if (debug) {
+      suiveurs[i].debug(target);
+    }
+  }
 }
 
 function keyPressed() {
-  // Lorsque la touche "a" est pressée, définir une nouvelle cible
-  if (key === 'a' || key === 'A') {
-    target.set(mouseX, mouseY); // Mettre à jour la cible
-    targetSet = true; // Activer la cible
-    leader.resume(); // Reprendre le mouvement du leader
+  // Toggle debug mode when "D" is pressed
+  if (key === 'd' || key === 'D') {
+    debug = !debug;
   }
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight); // Adapter le canevas à la fenêtre
+  resizeCanvas(windowWidth, windowHeight); // Adjust canvas to window size
 }

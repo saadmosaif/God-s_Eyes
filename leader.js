@@ -1,82 +1,101 @@
 class Leader {
-    constructor(x, y) {
-      this.pos = createVector(x, y); // Position initiale
-      this.vel = createVector(0, 0); // Vitesse initiale
-      this.acc = createVector(0, 0); // Accélération
-      this.maxSpeed = 2; // Vitesse maximale
-      this.maxForce = 0.1; // Force maximale
-      this.rayonZoneDeFreinage = 100; // Rayon où le leader commence à ralentir
-      this.stopped = false; // Indique si le leader est arrêté
-      this.size = 40;
+    constructor(x, y, image) {
+      this.pos = createVector(x, y); // Initial position
+      this.vel = createVector(1, 0); // Initial velocity
+      this.acc = createVector(0, 0); // Acceleration
+      this.maxSpeed = 2; // Maximum speed
+      this.maxForce = 0.1; // Maximum steering force
+      this.image = image; // Image for the leader
+      this.r = 46; // Size of the leader
+  
+      // Wander behavior parameters
+      this.distanceCercle = 150; // Distance to the wandering circle
+      this.wanderRadius = 50; // Radius of the wandering circle
+      this.wanderTheta = PI / 2; // Initial wandering angle
+      this.displaceRange = 0.3; // Range of random angle displacement
     }
   
-    seek(target, arrival = false) {
-      if (this.stopped) return createVector(0, 0); // Aucune force si le leader est arrêté
+    wander() {
+      // Calculate the center of the wandering circle
+      let circleCenter = this.vel.copy();
+      circleCenter.setMag(this.distanceCercle);
+      circleCenter.add(this.pos);
   
-      let force = p5.Vector.sub(target, this.pos); // Calcul de la direction vers la cible
-      let desiredSpeed = this.maxSpeed;
+      // Calculate the wandering point on the circle
+      this.wanderTheta += random(-this.displaceRange, this.displaceRange);
+      let wanderPoint = createVector(
+        this.wanderRadius * cos(this.wanderTheta),
+        this.wanderRadius * sin(this.wanderTheta)
+      );
+      wanderPoint.add(circleCenter);
   
-      if (arrival) {
-        const dist = p5.Vector.dist(this.pos, target); // Distance à la cible
+      // Calculate the steering force toward the wandering point
+      let force = p5.Vector.sub(wanderPoint, this.pos);
+      force.setMag(this.maxForce);
+      this.applyForce(force);
   
-        // Ralentir progressivement dans la zone de freinage
-        if (dist < this.rayonZoneDeFreinage) {
-          desiredSpeed = map(dist, 0, this.rayonZoneDeFreinage, 0, this.maxSpeed);
-  
-          // Si très proche de la cible, arrêter complètement
-          if (dist < 5) { // Tolérance de 5 pixels
-            this.stop(); // Appeler la méthode pour arrêter le leader
-            return createVector(0, 0); // Pas de force
-          }
-        }
-      }
-  
-      // Calcul de la force pour ajuster la vitesse
-      force.setMag(desiredSpeed);
-      force.sub(this.vel);
-      force.limit(this.maxForce);
-      return force;
-    }
-  
-    arrive(target) {
-      return this.seek(target, true); // Activer le mode "arrive"
+      // Save debug info
+      this.debugInfo = { circleCenter, wanderPoint };
     }
   
     applyForce(force) {
-      if (!this.stopped) { // Appliquer la force seulement si le leader n'est pas arrêté
-        this.acc.add(force);
-      }
+      this.acc.add(force); // Add force to acceleration
     }
   
     update() {
-      if (!this.stopped) { // Mettre à jour seulement si le leader n'est pas arrêté
-        this.vel.add(this.acc); // Ajouter l'accélération à la vitesse
-        this.vel.limit(this.maxSpeed); // Limiter la vitesse
-        this.pos.add(this.vel); // Mettre à jour la position
-        this.acc.set(0, 0); // Réinitialiser l'accélération
+      this.vel.add(this.acc); // Update velocity
+      this.vel.limit(this.maxSpeed); // Limit the velocity
+      this.pos.add(this.vel); // Update position
+      this.acc.set(0, 0); // Reset acceleration
+    }
+  
+    edges() {
+      // Prevent the leader from leaving the screen
+      if (this.pos.x - this.r < 0) {
+        this.pos.x = this.r; // Left edge
+        this.vel.x *= -1;
+      } else if (this.pos.x + this.r > width) {
+        this.pos.x = width - this.r; // Right edge
+        this.vel.x *= -1;
       }
-    }
-  
-    stop() {
-      this.vel.set(0, 0); // Mettre la vitesse à zéro
-      this.acc.set(0, 0); // Mettre l'accélération à zéro
-      this.stopped = true; // Marquer le leader comme arrêté
-    }
-  
-    resume() {
-      this.stopped = false; // Permettre au leader de se déplacer à nouveau
+      if (this.pos.y - this.r < 0) {
+        this.pos.y = this.r; // Top edge
+        this.vel.y *= -1;
+      } else if (this.pos.y + this.r > height) {
+        this.pos.y = height - this.r; // Bottom edge
+        this.vel.y *= -1;
+      }
     }
   
     show() {
-        // Afficher l'image du leader
-        push();
-        translate(this.pos.x, this.pos.y);
-        if (this.vel.mag() > 0) {
-            rotate(this.vel.heading() + HALF_PI); // Ajuster la rotation pour aligner correctement l'image
-          }
-        imageMode(CENTER);
-        image(leaderImg, 0, 0, this.size, this.size); // Afficher l'image avec la taille définie
-        pop();
-      }
+      // Draw the leader with the image
+      push();
+      translate(this.pos.x, this.pos.y);
+      rotate(this.vel.heading() - PI / 2); // Rotate the image to align with direction
+      imageMode(CENTER);
+      image(this.image, 0, 0, this.r * 2, this.r * 2); // Draw the image
+      pop();
+    }
+  
+    debug() {
+      // Draw the wandering circle
+      noFill();
+      stroke(255, 0, 0, 150); // Red color for the wandering circle
+      ellipse(this.debugInfo.circleCenter.x, this.debugInfo.circleCenter.y, this.wanderRadius * 2);
+  
+      // Draw the wandering point
+      fill(0, 255, 0); // Green color for the wandering point
+      noStroke();
+      ellipse(this.debugInfo.wanderPoint.x, this.debugInfo.wanderPoint.y, 8);
+  
+      // Draw the velocity line from the leader's center
+      stroke(255, 255, 0, 150); // Yellow color for the velocity line
+      line(
+        this.pos.x,
+        this.pos.y,
+        this.pos.x + this.vel.x * 50, // Extend the line in the velocity direction
+        this.pos.y + this.vel.y * 50
+      );
+    }
   }
   
