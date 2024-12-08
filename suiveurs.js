@@ -1,54 +1,55 @@
 class Suiveurs {
     constructor(x, y) {
       this.pos = createVector(x, y); // Initial position
-      this.vel = createVector(0, 0); // Initial velocity
+      this.vel = createVector(0, 0); // Velocity
       this.acc = createVector(0, 0); // Acceleration
       this.maxSpeed = 2; // Maximum speed
-      this.maxForce = 0.1; // Maximum steering force
-      this.size = 8; // Size of the follower
+      this.maxForce = 0.1; // Maximum force
+      this.r = 20; // Radius (controls the size of the displayed image)
     }
   
-    triangularTarget(leader, index, spacing = 30) {
-      let row = Math.floor((-1 + Math.sqrt(1 + 8 * index)) / 2); // Row number in the triangle
-      let positionInRow = index - (row * (row + 1)) / 2; // Position in the row
-      let offsetX = (positionInRow - row / 2) * spacing; // Horizontal offset
-      let offsetY = (row + 1) * spacing; // Vertical offset
-      let heading = leader.vel.heading();
-      let offset = createVector(offsetX, offsetY).rotate(heading); // Rotate to align with leader
-      return p5.Vector.add(leader.pos, offset); // Global target
-    }
-  
+    // Method to follow a target position
     followTarget(target) {
-      let desired = p5.Vector.sub(target, this.pos); // Direction to the target
-      desired.setMag(this.maxSpeed);
-      let steer = p5.Vector.sub(desired, this.vel); // Steering force
-      steer.limit(this.maxForce);
-      this.applyForce(steer);
+      let desired = p5.Vector.sub(target, this.pos); // Direction to target
+      desired.setMag(this.maxSpeed); // Set to max speed
+      let steer = p5.Vector.sub(desired, this.vel); // Calculate steering force
+      steer.limit(this.maxForce); // Limit steering force
+      this.applyForce(steer); // Apply the force
     }
   
+    // Method to apply a force to the suiveur
     applyForce(force) {
       this.acc.add(force);
     }
   
+    // Update the position and velocity
     update() {
-      this.vel.add(this.acc);
-      this.vel.limit(this.maxSpeed);
-      this.pos.add(this.vel);
-      this.acc.set(0, 0); // Reset acceleration
+      this.vel.add(this.acc); // Add acceleration to velocity
+      this.vel.limit(this.maxSpeed); // Limit velocity
+      this.pos.add(this.vel); // Update position
+      this.acc.set(0, 0); // Reset acceleration for the next frame
     }
   
+    // Ensure suiveurs stay within screen bounds
+    edges() {
+      if (this.pos.x > width) this.pos.x = width;
+      if (this.pos.x < 0) this.pos.x = 0;
+      if (this.pos.y > height) this.pos.y = height;
+      if (this.pos.y < 0) this.pos.y = 0;
+    }
+  
+    // Display the suiveur using the image
     show() {
-      fill(0, 255, 0);
-      noStroke();
-      ellipse(this.pos.x, this.pos.y, this.size);
+      imageMode(CENTER);
+      image(suiveurImg, this.pos.x, this.pos.y, this.r * 2, this.r * 2); // Display suiveur image
     }
   
-    // Debug method to visualize follower behavior
+    // Debug method to visualize the suiveur's behavior
     debug(target) {
-      stroke(0, 255, 0);
-      line(this.pos.x, this.pos.y, target.x, target.y); // Line to the target
-      fill(255, 0, 0);
-      ellipse(target.x, target.y, 6); // Mark the target
+      if (debug) {
+        stroke(0, 255, 0); // Green debug line
+        line(this.pos.x, this.pos.y, target.x, target.y); // Line to target
+      }
     }
   }
   

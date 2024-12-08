@@ -1,18 +1,16 @@
 class Obstacle {
-    constructor(x, y, r, couleur) {
+    constructor(x, y, size, image) {
       this.pos = createVector(x, y);
-      this.r = r;
-      this.color = couleur;
+      this.size = size;
+      this.image = image;
     }
   
     show() {
       push();
-      fill(this.color);
-      stroke(0)
-      strokeWeight(3);
-      ellipse(this.pos.x, this.pos.y, this.r * 2);
-      fill(0);
-      ellipse(this.pos.x, this.pos.y, 10);
+      translate(this.pos.x, this.pos.y);
+      imageMode(CENTER);
+      image(this.image, 0, 0, this.size, this.size);
       pop();
     }
   }
+  
