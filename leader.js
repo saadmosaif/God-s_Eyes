@@ -9,6 +9,11 @@ class Leader {
     this.r = 46;
     this.suiveurs = [];
     this.separationRadius = 60; // Minimum distance to maintain from other leaders
+    this.rockets = []; // Rockets fired by the leader
+    this.lastShot = 0; // Timestamp of the last shot
+    this.detectionRadius = 200; // Radius to detect enemies
+
+
 
     // Wander behavior parameters
     this.distanceCercle = 150;
@@ -21,6 +26,30 @@ class Leader {
       this.suiveurs.push(new Suiveurs(this.pos.x, this.pos.y));
     }
   }
+  shoot(enemies) {
+    let now = millis();
+    if (now - this.lastShot >= 500) { // Shoot every 500ms
+      // Find enemies within the detection radius
+      let targets = enemies.filter(enemy => p5.Vector.dist(this.pos, enemy.pos) < this.detectionRadius);
+      
+      if (targets.length > 0) {
+        // Target the closest enemy within the detection radius
+        let closestEnemy = targets[0];
+        let closestDist = p5.Vector.dist(this.pos, closestEnemy.pos);
+        for (let enemy of targets) {
+          let d = p5.Vector.dist(this.pos, enemy.pos);
+          if (d < closestDist) {
+            closestDist = d;
+            closestEnemy = enemy;
+          }
+        }
+        // Create a rocket targeting the closest enemy
+        this.rockets.push(new Rocket(this.pos.x, this.pos.y, closestEnemy));
+        this.lastShot = now;
+      }
+    }
+  }
+
 
   // Separation behavior for leaders
   separate(others) {
@@ -110,6 +139,9 @@ class Leader {
 
   // Update leader position, velocity, and behavior
   update(obstacles = [], enemies = [], otherLeaders = []) {
+
+      // Shooting
+      this.shoot(enemies);
     // Apply separation force to avoid other leaders
     let separationForce = this.separate(otherLeaders);
     this.applyForce(separationForce);
@@ -148,6 +180,20 @@ class Leader {
 
     // Ensure the leader stays within the screen boundaries
     this.edges();
+  }
+  // Update rockets
+  updateRockets() {
+    for (let i = this.rockets.length - 1; i >= 0; i--) {
+      let rocket = this.rockets[i];
+      rocket.update();
+      rocket.show();
+
+      // Remove rocket if it hits a target
+      if (rocket.target && rocket.hits(rocket.target)) {
+        enemies.splice(enemies.indexOf(rocket.target), 1); // Remove enemy
+        this.rockets.splice(i, 1); // Remove rocket
+      }
+    }
   }
 
   // Pursue the predicted future position of an enemy

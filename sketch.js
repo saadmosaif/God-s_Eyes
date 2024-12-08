@@ -40,6 +40,7 @@ function draw() {
     leader.wander(); // Wander behavior
     leader.update(obstacles, enemies, leaders);// Update with obstacle and enemy avoidance
     leader.show(); // Display the leader
+    leader.updateRockets();
 
     if (debug) leader.debug(); // Display leader debug info
 
