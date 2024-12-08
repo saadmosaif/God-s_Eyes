@@ -3,6 +3,7 @@ let leaderImg, suiveurImg, bgImage, rockImg, enemyImg;
 let debug = false;
 let obstacles = [];
 let enemies = [];
+let rocketImg;
 
 function preload() {
   bgImage = loadImage('assets/map.png');
@@ -10,6 +11,7 @@ function preload() {
   suiveurImg = loadImage('assets/suiveurs.png');
   rockImg = loadImage('assets/rock.png');
   enemyImg = loadImage('assets/enemy.png');
+  rocketImg = loadImage('assets/rocket.png');
 }
 
 function setup() {
@@ -90,20 +92,31 @@ function mousePressed(event) {
 
 function keyPressed() {
   if (key === 'a' || key === 'A') {
-    leaders.push(new Leader(mouseX, mouseY, leaderImg, 5));
+    leaders.push(new Leader(mouseX, mouseY, leaderImg, 10));
   }
   if (key === 'd' || key === 'D') {
     debug = !debug;
   }
   if (key === 'e' || key === 'E') {
-    let swarmSize = 5; // Number of enemies in the swarm
+    let swarmSize = 10;
     for (let i = 0; i < swarmSize; i++) {
       let x = mouseX + random(-50, 50);
       let y = mouseY + random(-50, 50);
-      enemies.push(new Enemy(x, y, enemyImg)); // Instantiate using the Enemy class
+      enemies.push(new Enemy(x, y, enemyImg));
+    }
+  }
+  if (key === 's' || key === 'S') {
+    for (let leader of leaders) {
+      leader.formation = "snake";
+    }
+  }
+  if (key === 'v' || key === 'V') {
+    for (let leader of leaders) {
+      leader.formation = "triangle";
     }
   }
 }
+
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);

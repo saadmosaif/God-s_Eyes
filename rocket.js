@@ -33,10 +33,13 @@ class Rocket {
     }
   
     show() {
-      fill(255, 0, 0);
-      noStroke();
-      ellipse(this.pos.x, this.pos.y, this.r * 2); // Draw the rocket
-    }
+        push();
+        translate(this.pos.x, this.pos.y);
+        rotate(this.vel.heading());
+        imageMode(CENTER);
+        image(rocketImg, 0, 0, this.r * 4, this.r * 2); // Display rocket image
+        pop();
+      }
   
     hits(target) {
       let d = p5.Vector.dist(this.pos, target.pos);

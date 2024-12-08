@@ -186,7 +186,7 @@ class Enemy {
         // Debug fleeing radius
         noFill();
         stroke(0, 255, 0, 100); // Green for flee radius
-        ellipse(this.pos.x, this.pos.y, 300); // Radius is 2x flee distance (150)
+        ellipse(this.pos.x, this.pos.y, 100); // Radius is 2x flee distance (150)
   
         // Debug velocity vector
         stroke(255, 255, 0, 150); // Yellow for velocity vector

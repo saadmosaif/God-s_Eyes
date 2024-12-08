@@ -8,6 +8,7 @@ class Suiveurs {
       this.r = 20; // Radius (controls the size of the displayed image)
       this.leaderRadius = 100; // Maximum distance allowed from the leader
       this.cohesionRadius = 50; // Radius for cohesion with other suiveurs
+      
     }
   
     // Follow the target (leader or preceding suiveur)
@@ -31,33 +32,31 @@ class Suiveurs {
       }
     }
   
-    // Avoid collision with other suiveurs
-    separate(others) {
-      if (!Array.isArray(others)) return; // Ensure others is iterable
-  
-      let steer = createVector(0, 0);
-      let count = 0;
-  
-      for (let other of others) {
-        let d = p5.Vector.dist(this.pos, other.pos); // Distance to another suiveur
-        if (other !== this && d < this.r * 2) {
-          let diff = p5.Vector.sub(this.pos, other.pos); // Vector pointing away
-          diff.normalize(); // Normalize the direction
-          diff.div(d); // Weight by distance (closer = stronger avoidance)
-          steer.add(diff);
-          count++;
+    separate(others, radius = 40) {
+        let steer = createVector(0, 0);
+        let count = 0;
+      
+        for (let other of others) {
+          let d = p5.Vector.dist(this.pos, other.pos);
+          if (other !== this && d < radius) {
+            let diff = p5.Vector.sub(this.pos, other.pos); // Direction away from the neighbor
+            diff.normalize();
+            diff.div(d); // Weight by distance
+            steer.add(diff);
+            count++;
+          }
         }
+      
+        if (count > 0) {
+          steer.div(count); // Average out the separation vectors
+          steer.setMag(this.maxSpeed); // Adjust to max speed
+          steer.sub(this.vel); // Calculate steering
+          steer.limit(this.maxForce); // Limit the steering force
+        }
+      
+        return steer;
       }
-  
-      if (count > 0) {
-        steer.div(count); // Average out the steering forces
-        steer.setMag(this.maxSpeed); // Set magnitude to max speed
-        steer.sub(this.vel); // Steering formula: desired - current velocity
-        steer.limit(this.maxForce); // Limit the steering force
-      }
-      return steer;
-    }
-  
+      
     // Cohesion: Steer toward the average position of nearby suiveurs
     cohesion(others) {
       if (!Array.isArray(others)) return createVector(0, 0); // Ensure others is iterable
@@ -96,6 +95,7 @@ class Suiveurs {
   
     // Update the position, velocity, and apply behaviors
     update(leaderPos, others) {
+        
       let separationForce = this.separate(others); // Avoid collision with other suiveurs
       let cohesionForce = this.cohesion(others); // Stay close to other suiveurs
   

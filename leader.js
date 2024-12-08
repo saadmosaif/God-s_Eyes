@@ -11,7 +11,8 @@ class Leader {
     this.separationRadius = 60; // Minimum distance to maintain from other leaders
     this.rockets = []; // Rockets fired by the leader
     this.lastShot = 0; // Timestamp of the last shot
-    this.detectionRadius = 200; // Radius to detect enemies
+    this.detectionRadius = 150; // Radius to detect enemies
+    this.formation = "snake"; // Default formation
 
 
 
@@ -26,9 +27,48 @@ class Leader {
       this.suiveurs.push(new Suiveurs(this.pos.x, this.pos.y));
     }
   }
+  updateSuiveursFormation() {
+    if (this.formation === "snake") {
+      for (let i = 0; i < this.suiveurs.length; i++) {
+        let target = i === 0 ? this.pos : this.suiveurs[i - 1].pos;
+        this.suiveurs[i].followTarget(target);
+      }
+    } else if (this.formation === "triangle") {
+      let rowSpacing = 60; // Vertical spacing between rows
+      let colSpacing = 50; // Horizontal spacing between suiveurs in a row
+      let separationRadius = 60; // Minimum distance between suiveurs
+  
+      let index = 0; // Index of the current suiveur
+      let row = 0; // Current row index
+  
+      while (index < this.suiveurs.length) {
+        let numInRow = row + 1; // Number of suiveurs in the current row
+        let rowStartX = -((numInRow - 1) * colSpacing) / 2; // Center the row horizontally
+  
+        for (let col = 0; col < numInRow && index < this.suiveurs.length; col++) {
+          let xOffset = rowStartX + col * colSpacing;
+          let yOffset = (row + 1) * rowSpacing;
+  
+          // Target position for the suiveur
+          let target = p5.Vector.add(this.pos, createVector(xOffset, yOffset));
+  
+          // Apply separation force to avoid overlaps
+          let separationForce = this.suiveurs[index].separate(this.suiveurs, separationRadius);
+          this.suiveurs[index].applyForce(separationForce);
+  
+          // Move toward the calculated target
+          this.suiveurs[index].followTarget(target);
+  
+          index++;
+        }
+        row++;
+      }
+    }
+  }
+  
   shoot(enemies) {
     let now = millis();
-    if (now - this.lastShot >= 500) { // Shoot every 500ms
+    if (now - this.lastShot >= 1000) { // Shoot every 500ms
       // Find enemies within the detection radius
       let targets = enemies.filter(enemy => p5.Vector.dist(this.pos, enemy.pos) < this.detectionRadius);
       
@@ -180,6 +220,7 @@ class Leader {
 
     // Ensure the leader stays within the screen boundaries
     this.edges();
+    this.updateSuiveursFormation();
   }
   // Update rockets
   updateRockets() {
