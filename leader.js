@@ -13,9 +13,6 @@ class Leader {
     this.lastShot = 0; // Timestamp of the last shot
     this.detectionRadius = 150; // Radius to detect enemies
     this.formation = "snake"; // Default formation
-
-
-
     // Wander behavior parameters
     this.distanceCercle = 150;
     this.wanderRadius = 50;
@@ -27,6 +24,8 @@ class Leader {
       this.suiveurs.push(new Suiveurs(this.pos.x, this.pos.y));
     }
   }
+
+  // method pour les formation dispo
   updateSuiveursFormation() {
     if (this.formation === "snake") {
       for (let i = 0; i < this.suiveurs.length; i++) {
@@ -65,15 +64,16 @@ class Leader {
       }
     }
   }
-  
+
+  //shoot method
   shoot(enemies) {
     let now = millis();
-    if (now - this.lastShot >= 1000) { // Shoot every 500ms
+    if (now - this.lastShot >= 1000) {
       // Find enemies within the detection radius
       let targets = enemies.filter(enemy => p5.Vector.dist(this.pos, enemy.pos) < this.detectionRadius);
       
       if (targets.length > 0) {
-        // Target the closest enemy within the detection radius
+        // Target le plus proche
         let closestEnemy = targets[0];
         let closestDist = p5.Vector.dist(this.pos, closestEnemy.pos);
         for (let enemy of targets) {
@@ -83,7 +83,7 @@ class Leader {
             closestEnemy = enemy;
           }
         }
-        // Create a rocket targeting the closest enemy
+        // Cree un rocket envoyee vers le target
         this.rockets.push(new Rocket(this.pos.x, this.pos.y, closestEnemy));
         this.lastShot = now;
       }
@@ -91,7 +91,7 @@ class Leader {
   }
 
 
-  // Separation behavior for leaders
+  // Separation behavior
   separate(others) {
     let steer = createVector(0, 0);
     let count = 0;
@@ -102,7 +102,7 @@ class Leader {
         if (d > 0 && d < this.separationRadius) {
           let diff = p5.Vector.sub(this.pos, other.pos);
           diff.normalize();
-          diff.div(d); // Weight by distance
+          diff.div(d); 
           steer.add(diff);
           count++;
         }
@@ -118,7 +118,7 @@ class Leader {
     return steer;
   }
 
-   // Strong obstacle avoidance logic
+   // logic AvoidObstacle comme vu dans le cours :)
    avoidObstacles(obstacles) {
     let steer = createVector(0, 0);
 
@@ -127,14 +127,14 @@ class Leader {
       let avoidanceRadius = obstacle.size * 1.5;
 
       if (d < avoidanceRadius) {
-        // Calculate a strong force to move the leader away
+    
         let diff = p5.Vector.sub(this.pos, obstacle.pos);
         diff.normalize();
         let weight = map(d, 0, avoidanceRadius, 5, 1); // Stronger force closer to the obstacle
-        diff.mult(weight); // Amplify the force
+        diff.mult(weight); /
         steer.add(diff);
 
-        // Optional: immediately move leader outside the radius
+       
         let displacement = p5.Vector.sub(this.pos, obstacle.pos);
         if (d < obstacle.size) {
           this.pos.add(displacement.normalize().mult(avoidanceRadius - d)); // Push out
@@ -145,14 +145,14 @@ class Leader {
     if (steer.mag() > 0) {
       steer.setMag(this.maxSpeed);
       steer.sub(this.vel);
-      steer.limit(this.maxForce * 2); // Increase force for obstacle avoidance
+      steer.limit(this.maxForce * 2); //ajoute la force pour obstacle avoidance
     }
 
     return steer;
   }
 
 
-  // Wander behavior
+  // Wander behavior comme vu dans le cours aussi hhh
   wander() {
     let circleCenter = this.vel.copy();
     circleCenter.setMag(this.distanceCercle);
@@ -180,17 +180,17 @@ class Leader {
   // Update leader position, velocity, and behavior
   update(obstacles = [], enemies = [], otherLeaders = []) {
 
-      // Shooting
+      //on update la shoothing methods
       this.shoot(enemies);
-    // Apply separation force to avoid other leaders
+    // la separation
     let separationForce = this.separate(otherLeaders);
     this.applyForce(separationForce);
 
-    // Avoid obstacles
+    //evitement d'obstacle
     let avoidanceForce = this.avoidObstacles(obstacles);
     this.applyForce(avoidanceForce);
 
-    // Pursue the closest enemy if available
+    // et la poursuite 
     if (enemies.length > 0) {
       let closestEnemy = null;
       let closestDist = Infinity;
@@ -208,7 +208,7 @@ class Leader {
         this.applyForce(pursuitForce);
       }
     } else {
-      // Wander if no enemies are nearby
+      // si aucun enemie dans les parrage le leader est dans un wander state
       this.wander();
     }
 
@@ -218,7 +218,7 @@ class Leader {
     this.pos.add(this.vel);
     this.acc.set(0, 0);
 
-    // Ensure the leader stays within the screen boundaries
+    // les edges pour le leader
     this.edges();
     this.updateSuiveursFormation();
   }
@@ -237,7 +237,7 @@ class Leader {
     }
   }
 
-  // Pursue the predicted future position of an enemy
+  // poursuite de l enemie (comme celle du cours aussi)
   pursue(enemy) {
     let prediction = enemy.vel.copy();
     prediction.mult(10); // Predict 10 frames ahead
@@ -245,7 +245,7 @@ class Leader {
     return this.seek(futurePos);
   }
 
-  // Seek behavior
+  // Seek behavior(meme cas)
   seek(target) {
     let desired = p5.Vector.sub(target, this.pos);
     desired.setMag(this.maxSpeed);
@@ -254,7 +254,7 @@ class Leader {
     return steer;
   }
 
-  // Keep the leader within the screen boundaries
+  // les edges du leader
   edges() {
     if (this.pos.x > width) this.pos.x = width;
     if (this.pos.x < 0) this.pos.x = 0;
@@ -262,7 +262,7 @@ class Leader {
     if (this.pos.y < 0) this.pos.y = 0;
   }
 
-  // Display the leader
+  // affichage
   show() {
     push();
     translate(this.pos.x, this.pos.y);
