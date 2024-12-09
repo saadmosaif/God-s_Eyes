@@ -1,14 +1,14 @@
 let leaders = [];
 let leaderImg, suiveurImg, bgImage, rockImg, enemyImg, rocketImg;
 let buttonAImg, buttonDImg, buttonEImg, buttonSImg, buttonVImg;
-let font; // Font for text-to-points logic
+let font; 
 let debug = false;
 let obstacles = [];
 let enemies = [];
-let menu = true; // Tracks if we are on the menu screen or playing
-let gameTitle = "God's Eyes"; // The name of the game
+let menu = true;
+let gameTitle = "God's Eyes"; //NOM DU JEU
 
-// For the textToPoints title animation
+// pour les texttopoint
 let points = [];
 let pointVelocities = [];
 let originalPoints = [];
@@ -29,13 +29,11 @@ function preload() {
   buttonEImg = loadImage('assets/E.png');
   buttonSImg = loadImage('assets/S.png');
   buttonVImg = loadImage('assets/V.png');
-  font = loadFont('assets/Roboto-Bold.ttf'); // Ensure this font file exists
+  font = loadFont('assets/Roboto-Bold.ttf'); 
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-
-  // Generate text points for the game title
   textFont(font);
   textSize(150);
   let bounds = font.textBounds(gameTitle, 0, 0, 150);
@@ -49,17 +47,17 @@ function setup() {
     originalPoints.push(createVector(points[i].x, points[i].y));
   }
 
-  // Add the initial leader
+  //premier leader
   leaders.push(new Leader(width / 2, height / 2, leaderImg, 10));
 
-  // Create and position debug sliders (hidden initially)
+  // Creation des slider
   leaderSpeedSlider = createSlider(1, 5, 2, 0.1);
   leaderForceSlider = createSlider(0.05, 0.5, 0.1, 0.01);
   suiveurSpeedSlider = createSlider(1, 5, 2, 0.1);
   suiveurForceSlider = createSlider(0.05, 0.5, 0.1, 0.01);
   enemySpeedSlider = createSlider(1, 5, 3, 0.1);
   enemyForceSlider = createSlider(0.05, 0.5, 0.2, 0.01);
-
+// diseappear jusqu'a activation
   positionSlidersOffScreen();
 }
 
@@ -72,14 +70,14 @@ function draw() {
   }
 
   if (debug && !menu) {
-    positionSlidersOnScreen(); // Show sliders only when debug mode is on
+    positionSlidersOnScreen(); // afficher quand ON
     drawDebug();
   } else {
-    positionSlidersOffScreen(); // Hide sliders when debug mode is off
+    positionSlidersOffScreen(); //HIDE quand off
   }
 }
 
-// Draw the menu screen
+// l'affichage du menu
 function drawMenu() {
   background(20);
   imageMode(CORNER);
@@ -122,12 +120,12 @@ function drawMenu() {
   positionSlidersOffScreen();
 }
 
-// Draw the game
+// Afichage du jeu
 function drawGame() {
   background(30);
   imageMode(CORNER);
   image(bgImage, 0, 0, width, height);
-
+//les sliders concernant les entitee
   for (let leader of leaders) {
     leader.maxSpeed = leaderSpeedSlider.value();
     leader.maxForce = leaderForceSlider.value();
@@ -145,6 +143,8 @@ function drawGame() {
     enemy.maxForce = enemyForceSlider.value();
   }
 
+  //afficher obstacles
+
   for (let obstacle of obstacles) {
     imageMode(CENTER);
     image(rockImg, obstacle.pos.x, obstacle.pos.y, obstacle.size, obstacle.size);
@@ -157,6 +157,7 @@ function drawGame() {
   }
 
   for (let leader of leaders) {
+    //le leader est en mode wander
     leader.wander();
     leader.update(obstacles, enemies, leaders);
     leader.show();
@@ -166,6 +167,7 @@ function drawGame() {
 
     for (let suiveur of leader.suiveurs) {
       let target = leader.pos;
+      //les suiveurs suivent le leader
       suiveur.followTarget(target);
       suiveur.update(leader.pos, leader.suiveurs);
       suiveur.show();
@@ -175,10 +177,12 @@ function drawGame() {
   }
 
   for (let enemy of enemies) {
+    //les enemy sont en flock
     enemy.flock(enemies);
     for (let leader of leaders) {
       enemy.avoidLeaderAndSuiveurs(leader);
     }
+    //et evite les obstacle
     let obstacleAvoidance = enemy.avoidObstacles(obstacles);
     enemy.applyForce(obstacleAvoidance);
     enemy.update();
@@ -188,23 +192,21 @@ function drawGame() {
   }
 
   drawKeyImages();
-   // Draw the "Back to Menu" button
+ //le boutton back
    drawBackToMenuButton();
 }
+//la position de back to menu button
 
-// Draw the "Back to Menu" button
 function drawBackToMenuButton() {
-  let buttonX = width - 170; // Position on the top-left corner
+  let buttonX = width - 170;
   let buttonY = 20;
   let buttonWidth = 150;
   let buttonHeight = 50;
 
-  // Draw the button
-  fill(255, 0, 0); // Red background for the button
-  rect(buttonX, buttonY, buttonWidth, buttonHeight, 10); // Rounded corners
-
-  // Draw the button text
-  fill(255); // White text
+//le dessin de back to menu button
+  fill(255, 0, 0); // rouge
+  rect(buttonX, buttonY, buttonWidth, buttonHeight, 10); 
+  fill(255);
   textSize(20);
   textAlign(CENTER, CENTER);
   text("Menu", buttonX + buttonWidth / 2, buttonY + buttonHeight / 2);
@@ -223,30 +225,30 @@ function drawBackToMenuButton() {
   }
 }
 
-// Draw key images at the bottom of the screen with labels
+// les images des buttons
 function drawKeyImages() {
   imageMode(CENTER);
-  let spacing = width / 6; // Horizontal spacing between buttons
-  let yOffset = height - 50; // Y position of the images
-  let labelOffset = 40; // Offset for labels above the images
+  let spacing = width / 6; 
+  let yOffset = height - 50; 
+  let labelOffset = 40;
 
-    // Add text at the top center
+    
     textAlign(CENTER, TOP);
     textSize(20);
     fill(255); // White text
     text("Si clique sur bouton gauche faire apparaître un obstacle", width / 2, 10);
   
-  // Draw the images
+
   image(buttonAImg, spacing * 1, yOffset, 50, 50);
   image(buttonDImg, spacing * 2, yOffset, 50, 50);
   image(buttonEImg, spacing * 3, yOffset, 50, 50);
   image(buttonSImg, spacing * 4, yOffset, 50, 50);
   image(buttonVImg, spacing * 5, yOffset, 50, 50);
 
-  // Add labels above each image
+
   textAlign(CENTER);
   textSize(14);
-  fill(255); // White text color
+  fill(255); 
 
   text("Apparaître un Leader", spacing * 1, yOffset - labelOffset);
   text("Debug Mode", spacing * 2, yOffset - labelOffset);
@@ -255,7 +257,7 @@ function drawKeyImages() {
   text("Formation Triangle", spacing * 5, yOffset - labelOffset);
 }
 
-// Debug UI and labels
+// le menu de debug
 function drawDebug() {
   fill(255);
   noStroke();
@@ -271,7 +273,7 @@ function drawDebug() {
   text("Enemy Max Force", enemyForceSlider.x * 2 + enemyForceSlider.width, enemyForceSlider.y + 10);
 }
 
-// Mouse and key handling
+// si on click sur click gauche
 function mousePressed(event) {
   if (menu) {
     let buttonX = width / 2 - 100;
@@ -297,7 +299,7 @@ function mousePressed(event) {
     }
   }
 }
-
+// les button du clavier a cliquer
 function keyPressed() {
   if (!menu) {
     if (key === 'a' || key === 'A') {
@@ -326,11 +328,11 @@ function keyPressed() {
     }
   }
 }
-
+// sans cette commande l'image de background ne marche pas
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 }
-
+//position des slidder pour off et on screen
 function positionSlidersOffScreen() {
   leaderSpeedSlider.position(-200, -200);
   leaderForceSlider.position(-200, -200);
