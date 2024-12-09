@@ -5,12 +5,12 @@ class Enemy {
       this.acc = createVector(0, 0);
       this.maxSpeed = 3;
       this.maxForce = 0.2;
-      this.r = 20; // Radius for visual size
+      this.r = 20; 
       this.img = img;
-      this.perceptionRadius = 50; // Radius for flocking behaviors
+      this.perceptionRadius = 50; 
     }
   
-    // Separation: Avoid crowding nearby enemies
+    // les enemies ne se touche pas
     separate(enemies) {
       let steer = createVector(0, 0);
       let count = 0;
@@ -20,7 +20,7 @@ class Enemy {
         if (other !== this && d < this.perceptionRadius) {
           let diff = p5.Vector.sub(this.pos, other.pos);
           diff.normalize();
-          diff.div(d); // Weight by distance
+          diff.div(d); 
           steer.add(diff);
           count++;
         }
@@ -35,7 +35,7 @@ class Enemy {
       return steer;
     }
   
-    // Alignment: Steer toward the average velocity of nearby enemies
+    // rester dans les allentours des autre enemy
     align(enemies) {
       let avgVel = createVector(0, 0);
       let count = 0;
@@ -87,14 +87,13 @@ class Enemy {
       return steer;
     }
   
-    // Flocking behavior: Combine separation, alignment, and cohesion
+    //la methode de flock() 
     flock(enemies) {
       let separation = this.separate(enemies);
       let alignment = this.align(enemies);
       let cohesion = this.cohesion(enemies);
   
-      // Weigh the forces
-      separation.mult(1.5); // More weight for separation
+      separation.mult(1.5);
       alignment.mult(1.0);
       cohesion.mult(1.0);
   
@@ -103,7 +102,7 @@ class Enemy {
       this.applyForce(cohesion);
     }
   
-    // Avoid obstacles
+    // Avoid obstacles methodes
     avoidObstacles(obstacles) {
       let steer = createVector(0, 0);
   
@@ -151,12 +150,12 @@ class Enemy {
       return createVector(0, 0);
     }
   
-    // Apply force to the enemy
+ 
     applyForce(force) {
       this.acc.add(force);
     }
   
-    // Update position and velocity
+    // 
     update() {
       this.vel.add(this.acc);
       this.vel.limit(this.maxSpeed);
@@ -166,7 +165,7 @@ class Enemy {
       this.edges(); // Keep enemies within canvas
     }
   
-    // Keep enemies within the canvas
+   //LES EDGES
     edges() {
       if (this.pos.x > width) this.pos.x = width;
       if (this.pos.x < 0) this.pos.x = 0;
@@ -174,7 +173,7 @@ class Enemy {
       if (this.pos.y < 0) this.pos.y = 0;
     }
   
-    // Display the enemy
+    // afficher les enemy
     show() {
       imageMode(CENTER);
       image(this.img, this.pos.x, this.pos.y, this.r * 2, this.r * 2);
